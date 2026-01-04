@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const argon2 = require('argon2');
 
 const usersSchema = new mongoose.Schema(
   {
@@ -24,5 +25,32 @@ const usersSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+usersSchema.pre("save", async function (next) {
+  const user = this;
+  
+  if (!user.isModified("password")) return next();
+
+  try {
+    const hash = await argon2.hash(user.password, {
+      type: argon2.argon2id,
+      memoryCost: 2 ** 16, 
+      timeCost: 3,
+      parallelism: 1 
+    });
+    
+    user.password = hash;
+    next();
+  } catch (err) {
+    return next(err);
+  }
+});
+
+usersSchema.methods.validatePassword = async function (candidatePassword) {
+  try {
+    return await argon2.verify(this.password, candidatePassword);
+  } catch (err) {
+    throw new Error(err);
+  }
+};
 
 module.exports = mongoose.model("User", usersSchema);
