@@ -25,10 +25,10 @@ const usersSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-usersSchema.pre("save", async function (next) {
+usersSchema.pre("save", async function () {
   const user = this;
   
-  if (!user.isModified("password")) return next();
+  if (!user.isModified("password")) return;
 
   try {
     const hash = await argon2.hash(user.password, {
@@ -39,9 +39,8 @@ usersSchema.pre("save", async function (next) {
     });
     
     user.password = hash;
-    next();
   } catch (err) {
-    return next(err);
+    throw new Error(err);
   }
 });
 
