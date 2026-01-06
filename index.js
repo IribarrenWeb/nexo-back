@@ -28,7 +28,7 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/auth", authRoutes)
 
 app.get("/", (req, res) => {
-  res.send("CLIPPER API WORKING");
+  res.send("NEXO API WORKING");
 });
 
 if (require.main === module) {
