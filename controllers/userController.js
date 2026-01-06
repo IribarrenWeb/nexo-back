@@ -12,8 +12,8 @@ const store = async (req, res) => {
             username: username,
             email: email,
             password: password,
-            avatar: avatar,
-            rol: rol,
+            avatar: avatar ?? '',
+            rol: rol.length ? rol : 'user',
         });
 
         await newModel.save();
