@@ -13,8 +13,7 @@ const login = async (req, res) => {
 
 const me = async (req, res) => {
     try {
-        const userId = req.user.id;
-        const user = await User.findById(userId).select("-password");
+        const user = req.user;
         if (!user) {
             return res.status(404).json({ mensaje: "Usuario no encontrado" });
         }
