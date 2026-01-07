@@ -93,7 +93,8 @@ const remove = async (req, res) => {
 
 const index = async (req, res) => {
     try {
-        const models = await User.find()
+        const params = req.params;
+        const models = await User.find(params)
             .sort({ createdAt: -1 });
         res.status(200).json(models);
     } catch (error) {
