@@ -6,7 +6,7 @@ const toLogin = async (credentials) => {
     const user = await User.findOne({ username: username });
 
     if (!user || !(await user.validatePassword(password))) {
-        throw new Error("credenciales invalidas");
+        throw new Error("Credenciales invalidas");
     }
 
     const token = generateToken({ userId: user._id, rol: user.rol });
