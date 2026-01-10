@@ -43,10 +43,14 @@ class ValidatorService {
                 case 'unique':
                     const modelKey = ruleParam.split(',')[0];
                     const fieldKey = ruleParam.split(',')[1] || key;
-                    const exists = await mongoose.models[modelKey].findOne({ [fieldKey]: value });
+                    const excludeId = ruleParam.split(',')[2] ? ruleParam.split(',')[2].split(':')[1] : null;
+                    const query = { [fieldKey]: value };
+                    if (excludeId) {
+                        query._id = { $ne: excludeId };
+                    }
+                    const exists = await mongoose.models[modelKey].findOne(query);
                     if (exists?._id) {
                         error = `El campo ${field} debe ser unico.`;
-                        console.log("unique error", error);
                     }
                     break;
                 default:
