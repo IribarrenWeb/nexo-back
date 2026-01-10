@@ -115,10 +115,15 @@ const remove = async (req, res) => {
 const index = async (req, res) => {
     try {
         const params = req.params;
+        const user = req.user;
+
+        params._id = { $ne: user._id }; // excluimos el usuario actual
+
         const models = await User.find(params)
             .sort({ createdAt: -1 });
         res.status(200).json(models);
     } catch (error) {
+        console.error(error);
         res.status(500).json({ mensaje: `Error al listar los ${modelName.toLowerCase()}` });
     }
 };
