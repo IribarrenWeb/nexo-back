@@ -1,10 +1,24 @@
 const User = require("../models/userModel");
 const mailService = require("../services/mailService");
+const ValidatorService = require("../services/validatorService");
 const modelName = "Usuario";
 
 const store = async (req, res) => {
     try {
         const { name, lastName, username, email, password, avatar, rol = 'user' } = req.body;
+
+        const validator = new ValidatorService({
+            name: { value: name, rules: ['required'] },
+            lastName: { value: lastName, rules: ['required'] },
+            username: { value: username, rules: ['unique:User,username'] },
+            email: { value: email, rules: ['required','unique:User,email'] },
+            password: { value: password, rules: ['required'] },
+        });
+
+        const errors = await validator.validate();
+        if (errors.length) {
+            return res.status(403).json({ mensaje: 'Errores de validacion', errors });
+        }
 
         const newModel = new User({
             name: name,
