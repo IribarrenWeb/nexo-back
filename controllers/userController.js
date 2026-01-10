@@ -7,6 +7,7 @@ const store = async (req, res) => {
     try {
         const { name, lastName, username, email, password, avatar, rol = 'user' } = req.body;
 
+        // iniciamos el validador
         const validator = new ValidatorService({
             name: { value: name, rules: ['required'] },
             lastName: { value: lastName, rules: ['required'] },
@@ -15,11 +16,13 @@ const store = async (req, res) => {
             password: { value: password, rules: ['required'] },
         });
 
+        // validamos los datos
         const errors = await validator.validate();
         if (errors.length) {
             return res.status(403).json({ mensaje: 'Errores de validacion', errors });
         }
 
+        // creamos el nuevo usuario
         const newModel = new User({
             name: name,
             lastName: lastName,
@@ -32,8 +35,9 @@ const store = async (req, res) => {
 
         await newModel.save();
 
-        // Enviar email de bienvenida
-        await mailService.sendEmail(
+        // enviar email de bienvenida
+        // asincronamente, no esperamos a que se envie para responder
+        mailService.sendEmail(
             newModel.email,
             'Bienvenido a Nexo',
             { name: newModel.name },
@@ -48,35 +52,56 @@ const store = async (req, res) => {
 
 const update = async (req, res) => {
     try {
-        const { userId } = req.params;
-        
+        const { id } = req.params;
+        const user = req.user;
         const { 
             name, 
             lastName, 
             email, 
             username, 
-            password, 
             avatar, 
             bio, 
             deactivated,
             rol
         } = req.body;
 
-        const model = await User.findById(userId);
+        const model = await User.findById(id);
+        const isSameUser = user._id == id;
+        const isAdmin = user.rol == 'admin';
 
-        if (!model) {
+        if (!model) { // si no existe el usuario devolvemos error
             return res.status(404).json({ mensaje: `${modelName} no encontrado` });
         }
 
-        if (name) model.name = name;
-        if (lastName) model.lastName = lastName;
-        if (email) model.email = email;
-        if (username) model.username = username;
-        if (password) model.password = password;
-        if (avatar) model.avatar = avatar;
-        if (bio) model.bio = bio;
-        if (deactivated !== undefined) model.deactivated = deactivated;
-        if (rol) model.rol = rol;
+        // iniciamos el validador
+        const validator = new ValidatorService({
+            email: { value: email, rules: [`unique:User,email,_id:${id}`] },
+            username: { value: username, rules: [`unique:User,username,_id:${id}`] },
+        });
+
+        const errors = []; // iniciamos el array de errores
+        
+        // actualizamos los campos que vengan en el body y cumplan las condiciones
+        if (name && isSameUser) model.name = name;
+        if (lastName && isSameUser) model.lastName = lastName;
+        if (email && isSameUser) {
+            model.email = email;
+            const err = await validator.validateField('email'); // validamos email
+            if (err) errors.push(err);
+        }
+        if (username && isSameUser) {
+            model.username = username;
+            const err = await validator.validateField('username'); // validamos username
+            if (err) errors.push(err);
+        }
+        if (avatar && isSameUser) model.avatar = avatar;
+        if (bio && isSameUser) model.bio = bio;
+        if (deactivated !== undefined && isAdmin) model.deactivated = deactivated;
+        if (rol && isAdmin) model.rol = rol;
+
+        if (errors.length) { // si hay errores los devolvemos
+            return res.status(403).json({ mensaje: 'Errores de validacion', errors });
+        }
 
         await model.save();
 
@@ -88,8 +113,8 @@ const update = async (req, res) => {
 
 const show = async (req, res) => {
     try {
-        const { userId } = req.params;
-        const model = await User.findById(userId);
+        const { id } = req.params;
+        const model = await User.findById(id);
         if (!model) {
             return res.status(404).json({ mensaje: `${modelName} no encontrado` });
         }
@@ -101,8 +126,8 @@ const show = async (req, res) => {
 
 const remove = async (req, res) => {
     try {
-        const { userId } = req.params;
-        const model = await User.findByIdAndDelete(userId);
+        const { id } = req.params;
+        const model = await User.findByIdAndDelete(id);
         if (!model) {
             return res.status(404).json({ mensaje: `${modelName} no encontrado` });
         }
