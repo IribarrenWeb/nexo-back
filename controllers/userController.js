@@ -1,5 +1,5 @@
 const User = require("../models/userModel");
-
+const mailService = require("../services/mailService");
 const modelName = "Usuario";
 
 const store = async (req, res) => {
@@ -18,9 +18,16 @@ const store = async (req, res) => {
 
         await newModel.save();
 
+        // Enviar email de bienvenida
+        await mailService.sendEmail(
+            newModel.email,
+            'Bienvenido a Nexo',
+            { name: newModel.name },
+            'welcome'
+        );
         res.status(201).json(newModel);
     } catch (error) {
-        res.status(500).json({ mensaje: `Error al crear el ${modelName.toLowerCase()}` });
+        res.status(500).json({ mensaje: `Error al crear el ${modelName.toLowerCase()}`, error: error.message });
     }
 };
 
