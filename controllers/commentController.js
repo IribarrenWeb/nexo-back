@@ -1,18 +1,49 @@
 const Comment = require("../models/commentModel");
+const ValidatorService = require("../services/validatorService");
 
 const modelName = "Comentario";
 
 const store = async (req, res) => {
     try {
-        const { text, postId, usuarioId } = req.body;
+        const { text, post } = req.body;
+        const usuarioId = req.user._id; // obtenemos el id del usuario autenticado
+
+        // iniciamos el validador con reglas
+        const validator = new ValidatorService({
+            text: { value: text, rules: ['required', 'minLength:1', 'maxLength:280'] },
+            post: { value: post, rules: ['required','exists:Post,_id'] },
+        });
+
+        // validamos los datos
+        const errors = await validator.validate();
+        
+        // si hay errores, respondemos con ellos
+        if (errors.length) {
+            return res.status(403).json({ mensaje: "Errores de validacion", errors });
+        }
 
         const newModel = new Comment({
             author: usuarioId,
             text: text,
-            post: postId,
+            post: post,
         });
 
         await newModel.save();
+
+        // cargamos las relaciones
+        await newModel.populate([
+            {
+                path: "author", 
+                select: "avatar name lastName username",
+            },
+            {
+                path: "likes",
+                select: "avatar name lastName username",
+            },
+            {
+                path: "post",
+            }
+        ]);
 
         res.status(201).json(newModel);
     } catch (error) {
@@ -23,9 +54,9 @@ const store = async (req, res) => {
 
 const update = async (req, res) => {
     try {
-        const { commentId } = req.params;
+        const { id } = req.params;
         const { text } = req.body;
-        const model = await Comment.findById(commentId);
+        const model = await Comment.findById(id);
 
         if (!model) {
             return res.status(404).json({ mensaje: `${modelName} no encontrado` });
@@ -42,8 +73,8 @@ const update = async (req, res) => {
 
 const show = async (req, res) => {
     try {
-        const { commentId } = req.params;
-        const model = await Comment.findById(commentId).populate("autor", "nombre usuario");
+        const { id } = req.params;
+        const model = await Comment.findById(id).populate("autor", "nombre usuario");
         if (!model) {
             return res.status(404).json({ mensaje: `${modelName} no encontrado` });
         }
@@ -55,8 +86,8 @@ const show = async (req, res) => {
 
 const remove = async (req, res) => {
     try {
-        const { commentId } = req.params;
-        const model = await Comment.findByIdAndDelete(commentId);
+        const { id } = req.params;
+        const model = await Comment.findByIdAndDelete(id);
         if (!model) {
             return res.status(404).json({ mensaje: `${modelName} no encontrado` });
         }
