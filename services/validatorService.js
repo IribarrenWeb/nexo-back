@@ -43,7 +43,7 @@ class ValidatorService {
                 case 'unique':
                     const modelKey = ruleParam.split(',')[0];
                     const fieldKey = ruleParam.split(',')[1] || key;
-                    const excludeId = ruleParam.split(',')[2] ? ruleParam.split(',')[2].split(':')[1] : null;
+                    const excludeId = ruleParam.split(',')[2] ? ruleParam.split(',')[2] : null;
                     const query = { [fieldKey]: value };
                     if (excludeId) {
                         query._id = { $ne: excludeId };

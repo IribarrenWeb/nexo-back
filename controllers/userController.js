@@ -75,8 +75,8 @@ const update = async (req, res) => {
 
         // iniciamos el validador
         const validator = new ValidatorService({
-            email: { value: email, rules: [`unique:User,email,_id:${id}`] },
-            username: { value: username, rules: [`unique:User,username,_id:${id}`] },
+            email: { value: email, rules: [`unique:User,email,${id}`] },
+            username: { value: username, rules: [`unique:User,username,${id}`] },
         });
 
         const errors = []; // iniciamos el array de errores
