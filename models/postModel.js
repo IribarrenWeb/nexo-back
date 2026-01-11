@@ -16,7 +16,11 @@ const postSchema = new mongoose.Schema(
       },
     ],
   },
-  { timestamps: true }
+  {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }, 
+    timestamps: true
+  }
 );
 
 // definimos la relacion virtual con los comentarios

@@ -107,9 +107,19 @@ const index = async (req, res) => {
         const posts = await Post.find(query)
             .skip((toPage - 1) * limit) // paginacion
             .limit(parseInt(limit)) // limite de resultados
-            .populate("author", "avatar name lastName username")
-            .populate("likes", "avatar name lastName username")
-            .populate("comments")
+            .populate([
+                {
+                    path:"author", 
+                    select:"avatar name lastName username"
+                },
+                {
+                    path: "likes",
+                    select: "avatar name lastName username",
+                },
+                {
+                    path: "comments",
+                }
+            ])
             .sort({ createdAt: -1 });
 
         res.status(200).json(posts);
