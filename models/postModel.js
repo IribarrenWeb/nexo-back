@@ -19,4 +19,11 @@ const postSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// definimos la relacion virtual con los comentarios
+postSchema.virtual("comments", {
+  ref: "Comment",
+  localField: "_id",
+  foreignField: "post",
+})
+
 module.exports = mongoose.model("Post", postSchema);

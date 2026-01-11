@@ -55,7 +55,7 @@ const update = async (req, res) => {
 const show = async (req, res) => {
     try {
         const { postId } = req.params;
-        const post = await Post.findById(postId).populate("author", "nombre usuario");
+        const post = await Post.findById(postId).populate("author", "avatar name lastName username");
         if (!post) {
             return res.status(404).json({ mensaje: "Post no encontrado" });
         }
@@ -80,9 +80,23 @@ const remove = async (req, res) => {
 
 const index = async (req, res) => {
     try {
-        const posts = await Post.find()
-            .populate("author", "nombre usuario")
+        const { page, limit = 15, userId } = req.query;
+        const query = {};
+        
+        if (userId) {
+            query.author = userId;
+        }
+
+        const toPage = parseInt(page) || 1;
+
+        const posts = await Post.find(query)
+            .skip((toPage - 1) * limit) // paginacion
+            .limit(parseInt(limit)) // limite de resultados
+            .populate("author", "avatar name lastName username")
+            .populate("likes", "avatar name lastName username")
+            .populate("comments")
             .sort({ createdAt: -1 });
+
         res.status(200).json(posts);
     } catch (error) {
         res.status(500).json({ mensaje: "Error al listar los posts" });
