@@ -114,11 +114,26 @@ const update = async (req, res) => {
 const show = async (req, res) => {
     try {
         const { id } = req.params;
-        const model = await User.findById(id);
-        if (!model) {
+        const result = await User.findById(id);
+        if (!result?.length) {
             return res.status(404).json({ mensaje: `${modelName} no encontrado` });
         }
-        res.status(200).json(model);
+        const user = result[0]; // obtenemos el primer usuario que coincida
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(500).json({ mensaje: `Error al obtener el ${modelName.toLowerCase()}` });
+    }
+};
+
+const showByUsername = async (req, res) => {
+    try {
+        const { username } = req.params;
+        const result = await User.find({ username: username });
+        if (!result?.length) {
+            return res.status(404).json({ mensaje: `${modelName} no encontrado` });
+        }
+        const user = result[0]; // obtenemos el primer usuario que coincida
+        res.status(200).json(user);
     } catch (error) {
         res.status(500).json({ mensaje: `Error al obtener el ${modelName.toLowerCase()}` });
     }
@@ -153,4 +168,4 @@ const index = async (req, res) => {
     }
 };
 
-module.exports = { store, update, show, remove, index };
+module.exports = { store, update, show, remove, index, showByUsername };
