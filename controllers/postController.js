@@ -1,13 +1,27 @@
 const Post = require("../models/postModel");
+const ValidatorService = require("../services/validatorService");
 
 const store = async (req, res) => {
     try {
-        const { contenido, imagen, usuarioId } = req.body;
+        const { content, image } = req.body;
+        const usuarioId = req.user._id; // obtenemos el id del usuario autenticado
+
+        // iniciamos el validador
+        const validator = new ValidatorService({
+            content: { value: content, rules: ['required', 'minLength:1', 'maxLength:280'] },
+        });
+
+        // validamos los datos
+        const errors = await validator.validate();
+        
+        if (errors.length) {
+            return res.status(403).json({ mensaje: "Errores de validacion", errors });
+        }
 
         const nuevoPost = new Post({
-            autor: usuarioId,
-            contenido: contenido,
-            imagen: imagen,
+            author: usuarioId,
+            content: content,
+            image: image,
         });
 
         await nuevoPost.save();
@@ -22,14 +36,14 @@ const store = async (req, res) => {
 const update = async (req, res) => {
     try {
         const { postId } = req.params;
-        const { contenido, imagen } = req.body;
+        const { content, image } = req.body;
         const postExistente = await Post.findById(postId);
 
         if (!postExistente) {
             return res.status(404).json({ mensaje: "Post no encontrado" });
         }
-        postExistente.contenido = contenido || postExistente.contenido;
-        postExistente.imagen = imagen || postExistente.imagen;
+        postExistente.content = content || postExistente.content;
+        postExistente.image = image || postExistente.image;
         await postExistente.save();
 
         res.status(200).json(postExistente);
@@ -41,7 +55,7 @@ const update = async (req, res) => {
 const show = async (req, res) => {
     try {
         const { postId } = req.params;
-        const post = await Post.findById(postId).populate("autor", "nombre usuario");
+        const post = await Post.findById(postId).populate("author", "nombre usuario");
         if (!post) {
             return res.status(404).json({ mensaje: "Post no encontrado" });
         }
@@ -67,7 +81,7 @@ const remove = async (req, res) => {
 const index = async (req, res) => {
     try {
         const posts = await Post.find()
-            .populate("autor", "nombre usuario")
+            .populate("author", "nombre usuario")
             .sort({ createdAt: -1 });
         res.status(200).json(posts);
     } catch (error) {
