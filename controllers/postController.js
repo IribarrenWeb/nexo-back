@@ -106,7 +106,9 @@ const index = async (req, res) => {
 const toLike = async (req, res) => {
     try {
         const { id } = req.params;
-        const { usuarioId } = req.body;
+        const user = req.user;
+        const usuarioId = user._id;
+
         const post = await Post.findById(id);
         if (!post) {
             return res.status(404).json({ mensaje: "Post no encontrado" });
@@ -118,6 +120,7 @@ const toLike = async (req, res) => {
             post.likes.splice(index, 1);
         }
         await post.save();
+        await post.populate("likes", "avatar name lastName username");
         res.status(200).json(post);
     } catch (error) {
         res.status(500).json({ mensaje: "Error al dar like al post" });
