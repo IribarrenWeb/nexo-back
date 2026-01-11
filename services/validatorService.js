@@ -28,12 +28,15 @@ class ValidatorService {
         const rules = ruleSet.rules; // reglas a aplicar
         let error = ''; // inicializamos el error como vacio
 
+        
         for (let index = 0; index < rules.length; index++) { // recorremos las reglas
             const rule = rules[index]; // regla actual
-            if (error.length) return; // si ya hay un error, no seguir validando
+            
+            if (error.length) return { field, message: error }; // si ya hay un error, no seguir validando
 
             const ruleKey = rule.split(':')[0] || null; // extraemos la clave de la regla
             const ruleParam = rule.split(':')[1] || null; // extraemos el parametro de la regla si existe
+
             switch (ruleKey) {
                 case 'required': // validacion de campo obligatorio
                     if (!value || (typeof value === 'string' && !value.trim().length)) {
