@@ -25,6 +25,21 @@ const store = async (req, res) => {
         });
 
         await nuevoPost.save();
+        
+        // cargamos las relaciones
+        await nuevoPost.populate([
+            {
+                path: "author", 
+                select: "avatar name lastName username",
+            },
+            {
+                path: "likes",
+                select: "avatar name lastName username",
+            },
+            {
+                path: "comments",
+            }
+        ])
 
         res.status(201).json(nuevoPost);
     } catch (error) {
