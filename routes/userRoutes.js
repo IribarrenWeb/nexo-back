@@ -5,11 +5,13 @@ const { store, remove, index, update, show, showByUsername } = require("../contr
 const { protected } = require("../middleware/authMiddleware");
 const adminProtected = require("../middleware/adminMiddleware");
 
-router.get("/", protected, adminProtected, index);
-router.get("/:id", protected, show);
-router.get("/by-username/:username", protected, showByUsername);
-router.post("/", protected, store);
-router.delete("/:id", protected, adminProtected, remove);
-router.put("/:id", protected, update);
+router.use(protected); // todas las rutas estan protegidas
+
+router.get("/", adminProtected, index);
+router.get("/:id", show);
+router.get("/by-username/:username", showByUsername);
+router.post("/", store);
+router.delete("/:id", adminProtected, remove);
+router.put("/:id", update);
 
 module.exports = router;
