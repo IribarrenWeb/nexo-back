@@ -99,8 +99,28 @@ const remove = async (req, res) => {
 
 const index = async (req, res) => {
     try {
-        const models = await Comment.find()
-            .populate("author", "nombre usuario")
+        const { page, limit = 15, post } = req.query;
+        const query = {};
+        
+        if (post) {
+            query.post = post;
+        }
+
+        const toPage = parseInt(page) || 1;
+
+        const models = await Comment.find(query)
+            .skip((toPage - 1) * limit) // paginacion
+            .limit(parseInt(limit)) // limite de resultados
+            .populate([
+                {
+                    path: "author", 
+                    select: "avatar name lastName username",
+                },
+                {
+                    path: "likes",
+                    select: "avatar name lastName username",
+                }
+            ])
             .sort({ createdAt: -1 });
         res.status(200).json(models);
     } catch (error) {
@@ -111,18 +131,28 @@ const index = async (req, res) => {
 const toLike = async (req, res) => {
     try {
         const { id } = req.params;
-        const { usuarioId } = req.body;
-        const model = await Comment.findById(id);
+        const userId = req.user._id; // extraemos el id del usuario autenticado
+        const model = await Comment.findById(id); // buscamos el comentario por id
+
         if (!model) {
             return res.status(404).json({ mensaje: `${modelName} no encontrado` });
         }
-        const index = model.likes.indexOf(usuarioId);
-        if (index === -1) {
-            model.likes.push(usuarioId);
-        } else {
+        const index = model.likes.indexOf(userId); // verificamos si el usuario ya ha dado like
+        if (index === -1) { // si no ha dado like, lo añadimos
+            model.likes.push(userId);
+        } else { // si ya ha dado like, lo removemos
             model.likes.splice(index, 1);
         }
+
         await model.save();
+        
+        // cargamos los likes con la info del usuario para la vista
+        await model.populate([
+            {
+                path: "likes",
+                select: "avatar name lastName username",
+            }
+        ]);
         res.status(200).json(model);
     } catch (error) {
         res.status(500).json({ mensaje: `Error al dar like al ${modelName.toLowerCase()}` });

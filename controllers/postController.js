@@ -50,9 +50,9 @@ const store = async (req, res) => {
 
 const update = async (req, res) => {
     try {
-        const { postId } = req.params;
+        const { id } = req.params;
         const { content, image } = req.body;
-        const postExistente = await Post.findById(postId);
+        const postExistente = await Post.findById(id);
 
         if (!postExistente) {
             return res.status(404).json({ mensaje: "Post no encontrado" });
@@ -69,8 +69,20 @@ const update = async (req, res) => {
 
 const show = async (req, res) => {
     try {
-        const { postId } = req.params;
-        const post = await Post.findById(postId).populate("author", "avatar name lastName username");
+        const { id } = req.params;
+        const post = await Post.findById(id).populate([
+            {
+                path:"author",
+                select:"avatar name lastName username"
+            },
+            {
+                path: "likes",
+                select: "avatar name lastName username",
+            },
+            {
+                path: "comments",
+            }
+        ]);
         if (!post) {
             return res.status(404).json({ mensaje: "Post no encontrado" });
         }
@@ -82,8 +94,8 @@ const show = async (req, res) => {
 
 const remove = async (req, res) => {
     try {
-        const { postId } = req.params;
-        const postEliminado = await Post.findByIdAndDelete(postId);
+        const { id } = req.params;
+        const postEliminado = await Post.findByIdAndDelete(id);
         if (!postEliminado) {
             return res.status(404).json({ mensaje: "Post no encontrado" });
         }
