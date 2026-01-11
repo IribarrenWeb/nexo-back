@@ -28,19 +28,19 @@ const usersSchema = new mongoose.Schema(
 usersSchema.pre("save", async function () {
   const user = this;
   
-  if (!user.isModified("password")) return;
-
-  try {
-    const hash = await argon2.hash(user.password, {
-      type: argon2.argon2id,
-      memoryCost: 2 ** 16, 
-      timeCost: 3,
-      parallelism: 1 
-    });
-    
-    user.password = hash;
-  } catch (err) {
-    throw new Error(err);
+  if (user.isModified("password")) {
+    try {
+      const hash = await argon2.hash(user.password, {
+        type: argon2.argon2id,
+        memoryCost: 2 ** 16, 
+        timeCost: 3,
+        parallelism: 1 
+      });
+      
+      user.password = hash;
+    } catch (err) {
+      throw new Error(err);
+    }
   }
 });
 
