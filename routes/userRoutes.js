@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const { store, remove, index, update, show, showByUsername } = require("../controllers/userController");
+const { store, remove, index, update, show, showByUsername, toFollow } = require("../controllers/userController");
 const { protected } = require("../middleware/authMiddleware");
 const adminProtected = require("../middleware/adminMiddleware");
 
@@ -13,5 +13,6 @@ router.get("/by-username/:username", showByUsername);
 router.post("/", store);
 router.delete("/:id", adminProtected, remove);
 router.put("/:id", update);
+router.put("/follow/:id", toFollow);
 
 module.exports = router;

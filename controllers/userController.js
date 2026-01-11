@@ -168,4 +168,56 @@ const index = async (req, res) => {
     }
 };
 
-module.exports = { store, update, show, remove, index, showByUsername };
+const toFollow = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = req.user;
+        const userId = req.user._id; // extraemos el id del usuario autenticado
+        const model = await User.findById(id); // buscamos el usuario por id
+        
+        if (!model) {
+            return res.status(404).json({ mensaje: `${modelName} no encontrado` });
+        }
+
+        // comprobamos si el usuario ya sigue al otro usuario
+        const isFollowing = model.followers.some(followerId => followerId.toString() === userId.toString());
+
+        if (!isFollowing) { // no lo sigue, lo añadimos
+            await User.findByIdAndUpdate(id, { $addToSet: { followers: userId } }); // actualizamos el usuario seguido
+            await User.findByIdAndUpdate(userId, { $addToSet: { followings: id } }); // actualizamos el usuario que sigue
+        } else { // ya lo sigue, lo eliminamos
+            await User.findByIdAndUpdate(id, { $pull: { followers: userId } }); // eliminamos el follower
+            await User.findByIdAndUpdate(userId, { $pull: { followings: id } }); // eliminamos el following
+        }
+
+        // cargamos los followers con la info del usuario para la vista
+        await model.populate([
+            {
+                path: "followers",
+                select: "avatar name lastName username",
+            },
+            {
+                path: "followings",
+                select: "avatar name lastName username",
+            }
+        ]);
+
+        await user.populate([
+            {
+                path: "followers",
+                select: "avatar name lastName username",
+            },
+            {
+                path: "followings",
+                select: "avatar name lastName username",
+            }
+        ]);
+
+        res.status(200).json({model, user});
+    }
+    catch (error) {
+        res.status(500).json({ mensaje: `Error al actualizar el seguimiento del ${modelName.toLowerCase()}` });
+    }
+}
+
+module.exports = { store, update, show, remove, index, showByUsername, toFollow };
