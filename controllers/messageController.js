@@ -126,4 +126,4 @@ const messagesFromUser = async (req, res) => {
 }
 
 
-module.exports = { store, update, show, remove, index, loadChats, messagesFromUser };
+module.exports = { store, update, remove, loadChats, messagesFromUser };
