@@ -104,7 +104,8 @@ const loadChats = async (req, res) => {
 const messagesFromUser = async (req, res) => {
     try {
         const user = req.user;
-        const { id, page, limit = 15 } = req.params;
+        const { id } = req.params;
+        const { page, limit = 15 } = req.query;
         const toPage = parseInt(page) || 1;
 
         const messages = await Message.find({
