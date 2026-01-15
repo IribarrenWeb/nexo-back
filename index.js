@@ -10,9 +10,18 @@ const messageRoutes = require("./routes/messageRoutes");
 const authRoutes = require("./routes/authRoutes");
 
 const PORT = process.env.PORT || 3000;
-const cors = require("cors")
+const cors = require("cors");
+const { seeder } = require("./utils/seeder");
 
 const app = express();
+
+// funcion seeder
+const seedUsers = async () => {
+  await connectDB(); // obtenemos la conexion a la db
+  seeder();
+}
+
+seedUsers(); // ejecutamos el seeder apenas inicia la app
 
 app.use(cors());
 app.use(express.json());
@@ -21,20 +30,24 @@ app.use(async (req, res, next) => {
   next();
 });
 
+// rutas api
 app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/auth", authRoutes)
 
+// ruta base
 app.get("/", (req, res) => {
   res.send("NEXO API WORKING");
 });
 
+
+// condicional para entorno de desarrollo
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`conectado al puerto: ${PORT}`);
   });
 }
 
-module.exports = app;
+module.exports = app; // exportamos app para compatibilidad en vercel
