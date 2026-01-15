@@ -201,4 +201,30 @@ const toFollow = async (req, res) => {
     }
 }
 
-module.exports = { store, update, show, remove, index, showByUsername, toFollow };
+const search = async (req, res) => {
+    try {
+        const { q } = req.query;
+        const user = req.user;
+        const regex = new RegExp(q, 'i'); // expresion regular para busqueda case-insensitive
+
+        const results = await User.aggregate([
+            {
+                $match: {
+                    _id: { $ne: user._id }, // excluimos el usuario actual
+                    $or: [
+                        { name: regex },
+                        { lastName: regex },
+                        { username: regex },
+                        { email: regex },
+                    ]
+                }
+            }
+        ])
+        res.status(200).json(results);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ mensaje: `Error al buscar los ${modelName.toLowerCase()}` });
+    }
+}
+
+module.exports = { store, update, show, remove, index, showByUsername, toFollow, search };
