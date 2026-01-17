@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { toPusher } = require("../services/pusher-service");
 
 const messageSchema = new mongoose.Schema(
   {
@@ -17,5 +18,10 @@ const messageSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+messageSchema.post("save", function (message) {
+  // enviar notificacion al frontend
+  toPusher(`messages-${message.to}`, "new-message", message);
+})
 
 module.exports = mongoose.model("Message", messageSchema);
