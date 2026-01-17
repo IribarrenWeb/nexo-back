@@ -8,6 +8,7 @@ const postRoutes = require("./routes/post-routes");
 const commentRoutes = require("./routes/comment-routes");
 const messageRoutes = require("./routes/message-routes");
 const authRoutes = require("./routes/auth-routes");
+const notificationRoutes = require("./routes/notification-routes");
 
 const PORT = process.env.PORT || 3000;
 const cors = require("cors");
@@ -36,6 +37,7 @@ app.use("/api/posts", postRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/auth", authRoutes)
+app.use("/api/notifications", notificationRoutes);
 
 // ruta base
 app.get("/", (req, res) => {
