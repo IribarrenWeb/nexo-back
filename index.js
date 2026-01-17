@@ -41,7 +41,13 @@ app.use("/api/notifications", notificationRoutes);
 
 // ruta base
 app.get("/", (req, res) => {
-  res.send("NEXO API WORKING");
+  // agregamos un archivo html simple como careta de la api
+  res.sendFile(__dirname + "/api.html");
+});
+
+// request fallback para rutas no definidas
+app.use((req, res) => {
+  res.status(404).json({ mensaje: "Ruta no encontrada" });
 });
 
 
