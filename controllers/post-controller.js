@@ -86,6 +86,68 @@ const remove = async (req, res) => {
     }
 };
 
+// obtener los posts virales
+const getViralPosts = async (req, res) => {
+    try {
+        // agregacion para obtener los posts virales
+        const posts = await Post.aggregate([
+            // filtramos los posts que tienen likes
+            {
+                $match: {
+                    likes: { $exists: true, $ne: [] },
+                }
+            },
+
+            // contamos los likes de cada post
+            {
+                $addFields: {likesCount: { $size: "$likes" }}
+            },
+
+            // filtramos los posts que tienen al menos 5 likes
+            {
+                $match: {
+                    likesCount: { $gte: 2 },
+                }
+            },
+
+            // ordenamos por numero de likes y fecha de creacion descendentes
+            {
+                $sort: { likesCount: -1, createdAt: -1 }
+            },
+
+            // limitamos a 10 resultados
+            {
+                $limit: 10
+            },
+
+            // hacemos lookup para obtener los datos del autor
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "author",
+                    foreignField: "_id",
+                    as: "author",
+                    pipeline: [
+                        // excluir campos innecesarios
+                        {
+                            $project: {
+                                avatar: 1,
+                                name: 1,
+                                lastName: 1,
+                                username: 1,
+                            }
+                        }
+                    ]
+                }
+            }
+        ])
+
+        res.status(200).json(posts);
+    } catch (error) {
+        res.status(500).json({ mensaje: "Error al obtener los posts virales" });
+    }
+}
+
 const index = async (req, res) => {
     try {
         const { page, limit = 15, userId } = req.query;
@@ -149,4 +211,4 @@ const toLike = async (req, res) => {
     }
 };
 
-module.exports = { store, show, remove, index, toLike };
+module.exports = { store, show, remove, index, toLike, getViralPosts };

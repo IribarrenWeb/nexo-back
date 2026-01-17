@@ -1,12 +1,13 @@
 const express = require("express");
 const router = express.Router();
 
-const { store, remove, index, toLike, show } = require("../controllers/post-controller");
+const { store, remove, index, toLike, show, getViralPosts } = require("../controllers/post-controller");
 const { protected } = require("../middleware/auth-middleware");
 
 router.use(protected); // todas las rutas estan protegidas
 
 router.get("/", index);
+router.get("/viral", getViralPosts);
 router.get("/:id", show);
 router.post("/", store);
 router.put("/like/:id", toLike);
