@@ -1,4 +1,3 @@
-const ValidatorService = require("../services/validator-service");
 const Notification = require("../models/notificationModel");
 
 // marcar notificaciones como leidas
@@ -23,7 +22,7 @@ const remove = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const notificacion = await Post.findByIdAndDelete(id);
+        const notificacion = await Notification.findByIdAndDelete(id);
         
         if (!notificacion) {
             return res.status(404).json({ mensaje: "Notification no encontrada" });
