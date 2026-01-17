@@ -36,9 +36,9 @@ usersSchema.pre("save", async function () {
     try {
       const hash = await argon2.hash(user.password, {
         type: argon2.argon2id,
-        memoryCost: 2 ** 16, 
+        memoryCost: 2 ** 14,
         timeCost: 3,
-        parallelism: 1 
+        parallelism: 1,
       });
       
       user.password = hash;
