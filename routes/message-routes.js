@@ -12,6 +12,5 @@ router.get("/chats/:id", messagesFromUser);
 router.post("/", store);
 router.delete("/:id", remove);
 router.put("/mark-read/:fromId", markRead);
-router.put("/:id", update);
 
 module.exports = router;
