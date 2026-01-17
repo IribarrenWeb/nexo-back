@@ -1,5 +1,6 @@
 const Comment = require("../models/commentModel");
-const ValidatorService = require("../services/validatorService");
+const ValidatorService = require("../services/validator-service");
+const { notificate } = require("../utils/helpers");
 
 const modelName = "Comentario";
 
@@ -7,6 +8,7 @@ const store = async (req, res) => {
     try {
         const { text, post } = req.body;
         const usuarioId = req.user._id; // obtenemos el id del usuario autenticado
+        const user = req.user;
 
         // iniciamos el validador con reglas
         const validator = new ValidatorService({
@@ -45,44 +47,15 @@ const store = async (req, res) => {
             }
         ]);
 
+        // si el autor del post no es el mismo que el que comenta, enviamos notificacion al autor
+        if (newModel.post.author != usuarioId) notificate(newModel.post.author,"Nuevo comentario", `El usuario @${user.username} comento tu post.`, {referenceModel: 'posts', referenceId: newModel.post._id, type: 'comment'});
+        
         res.status(201).json(newModel);
     } catch (error) {
         res.status(500).json({ mensaje: `Error al crear el ${modelName.toLowerCase()}` });
     }
 };
 
-
-const update = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { text } = req.body;
-        const model = await Comment.findById(id);
-
-        if (!model) {
-            return res.status(404).json({ mensaje: `${modelName} no encontrado` });
-        }
-
-        model.text = text || model.text;
-        await model.save();
-
-        res.status(200).json(model);
-    } catch (error) {
-        res.status(500).json({ mensaje: `Error al editar el ${modelName.toLowerCase()}` });
-    }
-};
-
-const show = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const model = await Comment.findById(id).populate("autor", "nombre usuario");
-        if (!model) {
-            return res.status(404).json({ mensaje: `${modelName} no encontrado` });
-        }
-        res.status(200).json(model);
-    } catch (error) {
-        res.status(500).json({ mensaje: `Error al obtener el ${modelName.toLowerCase()}` });
-    }
-};
 
 const remove = async (req, res) => {
     try {
@@ -97,6 +70,7 @@ const remove = async (req, res) => {
     }
 };
 
+// funcion para listar comentarios
 const index = async (req, res) => {
     try {
         const { page, limit = 15, post } = req.query;
@@ -128,6 +102,7 @@ const index = async (req, res) => {
     }
 };
 
+// funcion para dar like a un comentario
 const toLike = async (req, res) => {
     try {
         const { id } = req.params;
@@ -153,10 +128,14 @@ const toLike = async (req, res) => {
                 select: "avatar name lastName username",
             }
         ]);
+
+        // si el autor del comentario no es el mismo que el que da like, enviamos notificacion al autor
+        if (model.author != userId) notificate(model.author,`Nuevo like a tu comentario`, `Alguien ha dado like a tu comentario.`, {referenceModel: 'comments', referenceId: model._id, type: 'like'});
+
         res.status(200).json(model);
     } catch (error) {
         res.status(500).json({ mensaje: `Error al dar like al ${modelName.toLowerCase()}` });
     }
 };
 
-module.exports = { store, update, show, remove, index, toLike };
+module.exports = { store, remove, index, toLike };

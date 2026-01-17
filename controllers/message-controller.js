@@ -23,30 +23,6 @@ const store = async (req, res) => {
     }
 };
 
-
-const update = async (req, res) => {
-    try {
-        const { id } = req.params;
-        
-        const { 
-            read, 
-        } = req.body;
-
-        const model = await Message.findById(id);
-
-        if (!model) {
-            return res.status(404).json({ mensaje: `${modelName} no encontrado` });
-        }
-
-        await model.save();
-
-        res.status(200).json(model);
-    } catch (error) {
-        res.status(500).json({ mensaje: `Error al editar el ${modelName.toLowerCase()}` });
-    }
-};
-
-
 const remove = async (req, res) => {
     try {
         const { id } = req.params;
@@ -84,13 +60,20 @@ const loadChats = async (req, res) => {
         messages.forEach(message => {
             const fromId = message.from._id.toString();
             const toId = message.to._id.toString();
-            const chattedUserId = fromId == userId ? toId : fromId;
+            const userIdStr = userId.toString();
+            const chattedUserId = fromId == userIdStr ? toId : fromId;
             if (!chats.some((c) => c.userId === chattedUserId)) { // si el usuario no esta en el array, lo agregamos
                 chats.push({
                     userId: chattedUserId,
                     user: fromId == userId ? message.to : message.from, // guardamos los datos el usuario con el que se chateo
                     lastMessage: message, // guardamos el ultimo mensaje
+                    // validamos si el ultimo mensaje es para el usuario autenticado y no ha sido leido
+                    unreadCount: toId == userIdStr && !message.read ? 1 : 0,
                 });
+            } else if (toId === userIdStr && !message.read) {
+                // si el mensaje es para el usuario autenticado y no ha sido leido, incrementamos el contador de mensajes no leidos
+                const chatIndex = chats.findIndex((c) => c.userId === chattedUserId);
+                if (chatIndex !== -1) chats[chatIndex].unreadCount += 1;
             }
         });
 
@@ -104,7 +87,8 @@ const loadChats = async (req, res) => {
 const messagesFromUser = async (req, res) => {
     try {
         const user = req.user;
-        const { id, page, limit = 15 } = req.params;
+        const { id } = req.params;
+        const { page, limit = 15 } = req.query;
         const toPage = parseInt(page) || 1;
 
         const messages = await Message.find({
@@ -125,5 +109,35 @@ const messagesFromUser = async (req, res) => {
     }
 }
 
+const markRead = async (req, res) => {
+    try {
+        const user = req.user;
+        const { fromId } = req.params;
+        
+        // marcamos todos los mensajes como leidos
+        await Message.updateMany(
+            { from: fromId, to: user._id, read: false },
+            { $set: { read: true } }
+        );
+        res.status(200).json({ mensaje: "Mensajes marcados como leidos" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ mensaje: "Error" });
+    }
+}
 
-module.exports = { store, update, remove, loadChats, messagesFromUser };
+// funcion para obtener el total de mensajes no leidos del usuario autenticado
+const totalUnread = async (req, res) => {
+    try {
+        const userId = req.user._id; // obtenemos el id del usuario autenticado
+    
+        // contamos el total de mensajes no leidos para el usuario autenticado
+        const count = await Message.countDocuments({ to: userId, read: false });
+        res.status(200).json(count);
+    } catch (error) {
+        res.status(500).json({ mensaje: "Error al obtener el total de mensajes no leidos" });        
+    }
+}
+
+
+module.exports = { store, remove, loadChats, messagesFromUser, markRead, totalUnread };

@@ -1,5 +1,6 @@
 const Post = require("../models/postModel");
-const ValidatorService = require("../services/validatorService");
+const ValidatorService = require("../services/validator-service");
+const { notificate } = require("../utils/helpers");
 
 const store = async (req, res) => {
     try {
@@ -47,26 +48,6 @@ const store = async (req, res) => {
     }
 };
 
-
-const update = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { content, image } = req.body;
-        const postExistente = await Post.findById(id);
-
-        if (!postExistente) {
-            return res.status(404).json({ mensaje: "Post no encontrado" });
-        }
-        postExistente.content = content || postExistente.content;
-        postExistente.image = image || postExistente.image;
-        await postExistente.save();
-
-        res.status(200).json(postExistente);
-    } catch (error) {
-        res.status(500).json({ mensaje: "Error al editar el post" });
-    }
-};
-
 const show = async (req, res) => {
     try {
         const { id } = req.params;
@@ -104,6 +85,68 @@ const remove = async (req, res) => {
         res.status(500).json({ mensaje: "Error al eliminar el post" });
     }
 };
+
+// obtener los posts virales
+const getViralPosts = async (req, res) => {
+    try {
+        // agregacion para obtener los posts virales
+        const posts = await Post.aggregate([
+            // filtramos los posts que tienen likes
+            {
+                $match: {
+                    likes: { $exists: true, $ne: [] },
+                }
+            },
+
+            // contamos los likes de cada post
+            {
+                $addFields: {likesCount: { $size: "$likes" }}
+            },
+
+            // filtramos los posts que tienen al menos 5 likes
+            {
+                $match: {
+                    likesCount: { $gte: 2 },
+                }
+            },
+
+            // ordenamos por numero de likes y fecha de creacion descendentes
+            {
+                $sort: { likesCount: -1, createdAt: -1 }
+            },
+
+            // limitamos a 10 resultados
+            {
+                $limit: 10
+            },
+
+            // hacemos lookup para obtener los datos del autor
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "author",
+                    foreignField: "_id",
+                    as: "author",
+                    pipeline: [
+                        // excluir campos innecesarios
+                        {
+                            $project: {
+                                avatar: 1,
+                                name: 1,
+                                lastName: 1,
+                                username: 1,
+                            }
+                        }
+                    ]
+                }
+            }
+        ])
+
+        res.status(200).json(posts);
+    } catch (error) {
+        res.status(500).json({ mensaje: "Error al obtener los posts virales" });
+    }
+}
 
 const index = async (req, res) => {
     try {
@@ -156,6 +199,10 @@ const toLike = async (req, res) => {
         } else {
             post.likes.splice(index, 1);
         }
+
+        // si el autor del post no es el mismo que el que da like, enviamos notificacion al autor
+        if (post.author != usuarioId) notificate(post.author,`Nuevo like a tu post`, `${user.name} ${user.lastName} ha dado like a tu post.`, {referenceModel: 'posts', referenceId: post._id, type: 'like'});
+
         await post.save();
         await post.populate("likes", "avatar name lastName username");
         res.status(200).json(post);
@@ -164,4 +211,4 @@ const toLike = async (req, res) => {
     }
 };
 
-module.exports = { store, update, show, remove, index, toLike };
+module.exports = { store, show, remove, index, toLike, getViralPosts };

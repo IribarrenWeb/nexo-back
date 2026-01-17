@@ -22,7 +22,11 @@ const usersSchema = new mongoose.Schema(
       enum: ["user", "admin", "moderador"],
     },
   },
-  { timestamps: true }
+  {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }, 
+    timestamps: true
+  }
 );
 
 usersSchema.pre("save", async function () {
@@ -51,5 +55,10 @@ usersSchema.methods.validatePassword = async function (candidatePassword) {
     throw new Error(err);
   }
 };
+
+// atributo virtual fullName para obtener el nombre completo del usuario
+usersSchema.virtual("fullName").get(function () {
+  return `${this.name} ${this.lastName}`;
+})
 
 module.exports = mongoose.model("User", usersSchema);

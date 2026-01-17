@@ -1,4 +1,4 @@
-const { toLogin } = require("../services/authService");
+const { toLogin } = require("../services/auth-service");
 const User = require("../models/userModel");
 
 const login = async (req, res) => {

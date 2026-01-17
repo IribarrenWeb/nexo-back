@@ -1,6 +1,7 @@
 const User = require("../models/userModel");
-const mailService = require("../services/mailService");
-const ValidatorService = require("../services/validatorService");
+const mailService = require("../services/mail-service");
+const ValidatorService = require("../services/validator-service");
+const { notificate } = require("../utils/helpers");
 const modelName = "Usuario";
 
 const store = async (req, res) => {
@@ -168,6 +169,7 @@ const index = async (req, res) => {
     }
 };
 
+// seguir/dejar de seguir a un usuario
 const toFollow = async (req, res) => {
     try {
         const { id } = req.params;
@@ -194,6 +196,9 @@ const toFollow = async (req, res) => {
             user = await User.findByIdAndUpdate(userId, { $pull: { followings: id } },{new: true});
         }
 
+        // enviamos notificacion al usuario seguido/seguido
+        notificate(model._id, isFollowing ? 'Perdida de seguidor' : 'Nuevo seguidor', `${user.name} ${user.lastName} ha ${isFollowing ? 'dejado de seguirte' : 'comenzado a seguirte'}.`, {referenceModel: 'users', referenceId: user._id, type: isFollowing ? 'unfollow' : 'follow'});
+
         res.status(200).json({model, user});
     }
     catch (error) {
@@ -201,4 +206,31 @@ const toFollow = async (req, res) => {
     }
 }
 
-module.exports = { store, update, show, remove, index, showByUsername, toFollow };
+// funcion para buscar usuarios
+const search = async (req, res) => {
+    try {
+        const { q } = req.query;
+        const user = req.user;
+        const regex = new RegExp(q, 'i'); // expresion regular para busqueda case-insensitive
+
+        const results = await User.aggregate([
+            {
+                $match: {
+                    _id: { $ne: user._id }, // excluimos el usuario actual
+                    $or: [
+                        { name: regex },
+                        { lastName: regex },
+                        { username: regex },
+                        { email: regex },
+                    ]
+                }
+            }
+        ])
+        res.status(200).json(results);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ mensaje: `Error al buscar los ${modelName.toLowerCase()}` });
+    }
+}
+
+module.exports = { store, update, show, remove, index, showByUsername, toFollow, search };

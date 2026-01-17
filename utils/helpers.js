@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
+const Notification = require("../models/notificationModel");
 
 dotenv.config();
 
@@ -15,7 +16,25 @@ const verifyToken = (token) => {
     }
 }
 
+const notificate = async (toUserId, title, message, data) => {
+    try {
+        const nuevaNotificacion = new Notification({
+            data: data,
+            title: title,
+            message: message,
+            user: toUserId,
+        });
+
+        await nuevaNotificacion.save();
+
+        return nuevaNotificacion;
+    } catch (error) {
+        console.error("Error al crear la notificación:", error);
+    }
+}
+
 module.exports = {
     generateToken,
     verifyToken,
+    notificate,
 };
