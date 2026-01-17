@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const { store, remove, index, update, toLike, show } = require("../controllers/post-controller");
+const { store, remove, index, toLike, show } = require("../controllers/post-controller");
 const { protected } = require("../middleware/auth-middleware");
 
 router.use(protected); // todas las rutas estan protegidas
@@ -11,6 +11,5 @@ router.get("/:id", show);
 router.post("/", store);
 router.put("/like/:id", toLike);
 router.delete("/:id", remove);
-router.put("/:id", update);
 
 module.exports = router;

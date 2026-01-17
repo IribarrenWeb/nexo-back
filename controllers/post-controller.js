@@ -48,26 +48,6 @@ const store = async (req, res) => {
     }
 };
 
-
-const update = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { content, image } = req.body;
-        const postExistente = await Post.findById(id);
-
-        if (!postExistente) {
-            return res.status(404).json({ mensaje: "Post no encontrado" });
-        }
-        postExistente.content = content || postExistente.content;
-        postExistente.image = image || postExistente.image;
-        await postExistente.save();
-
-        res.status(200).json(postExistente);
-    } catch (error) {
-        res.status(500).json({ mensaje: "Error al editar el post" });
-    }
-};
-
 const show = async (req, res) => {
     try {
         const { id } = req.params;
@@ -169,4 +149,4 @@ const toLike = async (req, res) => {
     }
 };
 
-module.exports = { store, update, show, remove, index, toLike };
+module.exports = { store, show, remove, index, toLike };

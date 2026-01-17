@@ -52,38 +52,6 @@ const store = async (req, res) => {
 };
 
 
-const update = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { text } = req.body;
-        const model = await Comment.findById(id);
-
-        if (!model) {
-            return res.status(404).json({ mensaje: `${modelName} no encontrado` });
-        }
-
-        model.text = text || model.text;
-        await model.save();
-
-        res.status(200).json(model);
-    } catch (error) {
-        res.status(500).json({ mensaje: `Error al editar el ${modelName.toLowerCase()}` });
-    }
-};
-
-const show = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const model = await Comment.findById(id).populate("autor", "nombre usuario");
-        if (!model) {
-            return res.status(404).json({ mensaje: `${modelName} no encontrado` });
-        }
-        res.status(200).json(model);
-    } catch (error) {
-        res.status(500).json({ mensaje: `Error al obtener el ${modelName.toLowerCase()}` });
-    }
-};
-
 const remove = async (req, res) => {
     try {
         const { id } = req.params;
@@ -159,4 +127,4 @@ const toLike = async (req, res) => {
     }
 };
 
-module.exports = { store, update, show, remove, index, toLike };
+module.exports = { store, remove, index, toLike };

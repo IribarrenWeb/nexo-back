@@ -23,30 +23,6 @@ const store = async (req, res) => {
     }
 };
 
-
-const update = async (req, res) => {
-    try {
-        const { id } = req.params;
-        
-        const { 
-            read, 
-        } = req.body;
-
-        const model = await Message.findById(id);
-
-        if (!model) {
-            return res.status(404).json({ mensaje: `${modelName} no encontrado` });
-        }
-
-        await model.save();
-
-        res.status(200).json(model);
-    } catch (error) {
-        res.status(500).json({ mensaje: `Error al editar el ${modelName.toLowerCase()}` });
-    }
-};
-
-
 const remove = async (req, res) => {
     try {
         const { id } = req.params;
@@ -164,4 +140,4 @@ const totalUnread = async (req, res) => {
 }
 
 
-module.exports = { store, update, remove, loadChats, messagesFromUser, markRead, totalUnread };
+module.exports = { store, remove, loadChats, messagesFromUser, markRead, totalUnread };
