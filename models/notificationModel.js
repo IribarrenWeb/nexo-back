@@ -3,7 +3,6 @@ const { toPusher } = require("../services/pusher-service");
 
 const notificationSchema = new mongoose.Schema(
   {
-    data: { type: Object, required: true },
     title: { type: String, required: true },
     message: { type: String, required: false },
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
@@ -11,6 +10,7 @@ const notificationSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    data: { type: Object, required: false },
   },
   { timestamps: true }
 );

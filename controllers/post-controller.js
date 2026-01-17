@@ -1,5 +1,6 @@
 const Post = require("../models/postModel");
 const ValidatorService = require("../services/validator-service");
+const { notificate } = require("../utils/helpers");
 
 const store = async (req, res) => {
     try {
@@ -156,6 +157,10 @@ const toLike = async (req, res) => {
         } else {
             post.likes.splice(index, 1);
         }
+
+        // si el autor del post no es el mismo que el que da like, enviamos notificacion al autor
+        if (post.author != usuarioId) notificate(post.author,`Nuevo like a tu post`, `${user.name} ${user.lastName} ha dado like a tu post.`, {postId: post._id, type: 'like'});
+
         await post.save();
         await post.populate("likes", "avatar name lastName username");
         res.status(200).json(post);
