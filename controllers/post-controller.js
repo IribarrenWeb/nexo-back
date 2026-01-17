@@ -201,7 +201,7 @@ const toLike = async (req, res) => {
         }
 
         // si el autor del post no es el mismo que el que da like, enviamos notificacion al autor
-        if (post.author != usuarioId) notificate(post.author,`Nuevo like a tu post`, `${user.name} ${user.lastName} ha dado like a tu post.`, {postId: post._id, type: 'like'});
+        if (post.author != usuarioId) notificate(post.author,`Nuevo like a tu post`, `${user.name} ${user.lastName} ha dado like a tu post.`, {referenceModel: 'posts', referenceId: post._id, type: 'like'});
 
         await post.save();
         await post.populate("likes", "avatar name lastName username");

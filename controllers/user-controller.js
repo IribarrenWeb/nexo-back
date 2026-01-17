@@ -1,6 +1,7 @@
 const User = require("../models/userModel");
 const mailService = require("../services/mail-service");
 const ValidatorService = require("../services/validator-service");
+const { notificate } = require("../utils/helpers");
 const modelName = "Usuario";
 
 const store = async (req, res) => {
@@ -168,6 +169,7 @@ const index = async (req, res) => {
     }
 };
 
+// seguir/dejar de seguir a un usuario
 const toFollow = async (req, res) => {
     try {
         const { id } = req.params;
@@ -194,6 +196,9 @@ const toFollow = async (req, res) => {
             user = await User.findByIdAndUpdate(userId, { $pull: { followings: id } },{new: true});
         }
 
+        // enviamos notificacion al usuario seguido/seguido
+        notificate(model._id, isFollowing ? 'Perdida de seguidor' : 'Nuevo seguidor', `${user.name} ${user.lastName} ha ${isFollowing ? 'dejado de seguirte' : 'comenzado a seguirte'}.`, {referenceModel: 'users', referenceId: user._id, type: isFollowing ? 'unfollow' : 'follow'});
+
         res.status(200).json({model, user});
     }
     catch (error) {
@@ -201,6 +206,7 @@ const toFollow = async (req, res) => {
     }
 }
 
+// funcion para buscar usuarios
 const search = async (req, res) => {
     try {
         const { q } = req.query;
