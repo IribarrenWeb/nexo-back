@@ -84,13 +84,20 @@ const loadChats = async (req, res) => {
         messages.forEach(message => {
             const fromId = message.from._id.toString();
             const toId = message.to._id.toString();
-            const chattedUserId = fromId == userId ? toId : fromId;
+            const userIdStr = userId.toString();
+            const chattedUserId = fromId == userIdStr ? toId : fromId;
             if (!chats.some((c) => c.userId === chattedUserId)) { // si el usuario no esta en el array, lo agregamos
                 chats.push({
                     userId: chattedUserId,
                     user: fromId == userId ? message.to : message.from, // guardamos los datos el usuario con el que se chateo
                     lastMessage: message, // guardamos el ultimo mensaje
+                    // validamos si el ultimo mensaje es para el usuario autenticado y no ha sido leido
+                    unreadCount: toId == userIdStr && !message.read ? 1 : 0,
                 });
+            } else if (toId === userIdStr && !message.read) {
+                // si el mensaje es para el usuario autenticado y no ha sido leido, incrementamos el contador de mensajes no leidos
+                const chatIndex = chats.findIndex((c) => c.userId === chattedUserId);
+                if (chatIndex !== -1) chats[chatIndex].unreadCount += 1;
             }
         });
 
@@ -126,5 +133,22 @@ const messagesFromUser = async (req, res) => {
     }
 }
 
+const markRead = async (req, res) => {
+    try {
+        const user = req.user;
+        const { fromId } = req.params;
+        
+        // marcamos todos los mensajes como leidos
+        await Message.updateMany(
+            { from: fromId, to: user._id, read: false },
+            { $set: { read: true } }
+        );
+        res.status(200).json({ mensaje: "Mensajes marcados como leidos" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ mensaje: "Error" });
+    }
+}
 
-module.exports = { store, update, remove, loadChats, messagesFromUser };
+
+module.exports = { store, update, remove, loadChats, messagesFromUser, markRead };
