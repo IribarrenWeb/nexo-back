@@ -1,5 +1,5 @@
 const Comment = require("../models/commentModel");
-const ValidatorService = require("../services/validatorService");
+const ValidatorService = require("../services/validator-service");
 
 const modelName = "Comentario";
 

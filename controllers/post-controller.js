@@ -1,5 +1,5 @@
 const Post = require("../models/postModel");
-const ValidatorService = require("../services/validatorService");
+const ValidatorService = require("../services/validator-service");
 
 const store = async (req, res) => {
     try {

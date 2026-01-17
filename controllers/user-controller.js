@@ -1,6 +1,6 @@
 const User = require("../models/userModel");
-const mailService = require("../services/mailService");
-const ValidatorService = require("../services/validatorService");
+const mailService = require("../services/mail-service");
+const ValidatorService = require("../services/validator-service");
 const modelName = "Usuario";
 
 const store = async (req, res) => {

@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
 
-const { store, remove, index, update, show, showByUsername, toFollow, search } = require("../controllers/userController");
-const { protected } = require("../middleware/authMiddleware");
-const adminProtected = require("../middleware/adminMiddleware");
+const { store, remove, index, update, show, showByUsername, toFollow, search } = require("../controllers/user-controller");
+const { protected } = require("../middleware/auth-middleware");
+const adminProtected = require("../middleware/admin-middleware");
 
 router.use(protected); // todas las rutas estan protegidas
 

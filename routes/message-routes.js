@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
 
-const { store, remove, update, loadChats, messagesFromUser } = require("../controllers/messageController");
-const { protected } = require("../middleware/authMiddleware");
+const { store, remove, update, loadChats, messagesFromUser } = require("../controllers/message-controller");
+const { protected } = require("../middleware/auth-middleware");
 
 router.use(protected) // protegemos todas las rutas de mensajes
 
