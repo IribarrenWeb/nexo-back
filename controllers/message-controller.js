@@ -150,5 +150,18 @@ const markRead = async (req, res) => {
     }
 }
 
+// funcion para obtener el total de mensajes no leidos del usuario autenticado
+const totalUnread = async (req, res) => {
+    try {
+        const userId = req.user._id; // obtenemos el id del usuario autenticado
+    
+        // contamos el total de mensajes no leidos para el usuario autenticado
+        const count = await Message.countDocuments({ to: userId, read: false });
+        res.status(200).json(count);
+    } catch (error) {
+        res.status(500).json({ mensaje: "Error al obtener el total de mensajes no leidos" });        
+    }
+}
 
-module.exports = { store, update, remove, loadChats, messagesFromUser, markRead };
+
+module.exports = { store, update, remove, loadChats, messagesFromUser, markRead, totalUnread };
