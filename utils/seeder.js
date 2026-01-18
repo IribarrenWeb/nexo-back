@@ -5,7 +5,7 @@ const User = require("../models/userModel");
 const users = [
     // usuarios admin
     { name: 'nexo', lastName: 'master', username: 'nexo', email: 'nexomaster2@nexo.com', password: 'password0', rol: 'admin' },
-    { name: 'nexo2', lastName: 'master2', username: 'nexo2', email: 'nexomaster2@nexo.com', password: 'password0', rol: 'admin' },
+    { name: 'nexo2', lastName: 'master2', username: 'nexo2', email: 'nexomaster1@nexo.com', password: 'password0', rol: 'admin' },
 
     // usuarios normales
     { name: 'Pablo', lastName: 'Gonzalez', username: 'pablog', email: 'pgonzalez@nexo.com', password: 'password0', avatar: 'https://i.pravatar.cc/150?img=0' },
@@ -24,6 +24,12 @@ const users = [
     { name: 'Marta', lastName: 'Diaz', username: 'martad', email: 'martad@nexo.com', password: 'password13', avatar: 'https://i.pravatar.cc/150?img=13' },
 ]
 
+/**
+ * Funcion para poblar la base de datos con usuarios iniciales
+ * - Recorre el array de usuarios definidos
+ * - Verifica si el usuario ya existe en la base de datos
+ * - Si no existe, crea un nuevo usuario y lo guarda en la base de datos
+ */
 const seeder = () => {
     
     users.forEach(async (user) => {

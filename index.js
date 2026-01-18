@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const express = require("express");
 const connectDB = require("./config/db");
+const serveIndex = require("serve-index");
 
 const userRoutes = require("./routes/user-routes");
 const postRoutes = require("./routes/post-routes");
@@ -24,12 +25,25 @@ const seedUsers = async () => {
 
 seedUsers(); // ejecutamos el seeder apenas inicia la app
 
+// middlewares
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "10mb" })); // para parsear json con limite de 10mb para poder subir imagenes en base64
 app.use(async (req, res, next) => {
   await connectDB();
   next();
 });
+
+// servir imagenes estaticas de la carpeta storage/avatars y storage/banners
+app.use(
+  "/avatars",
+  express.static("storage/avatars"),
+  serveIndex("storage/avatars", { icons: true })
+);
+app.use(
+  "/banners",
+  express.static("storage/banners"),
+  serveIndex("storage/banners", { icons: true })
+);
 
 // rutas api
 app.use("/api/users", userRoutes);
