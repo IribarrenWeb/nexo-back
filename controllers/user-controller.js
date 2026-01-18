@@ -1,9 +1,20 @@
 const User = require("../models/userModel");
 const mailService = require("../services/mail-service");
 const ValidatorService = require("../services/validator-service");
-const { notificate } = require("../utils/helpers");
+const { notificate, decodeAndSaveImage } = require("../utils/helpers");
 const modelName = "Usuario";
 
+/**
+ * Api store para crear un nuevo usuario
+ * - Se validan los datos recibidos
+ * - Si hay errores de validacion se devuelven
+ * - Se crea el nuevo usuario
+ * - Se envia un email de bienvenida (si esta configurado el servicio de email)
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @returns Nuevo usuario creado
+ */
 const store = async (req, res) => {
     try {
         const { name, lastName, username, email, password, avatar, rol = 'user' } = req.body;
@@ -50,11 +61,24 @@ const store = async (req, res) => {
     }
 };
 
-
+/**
+ * Api update para actualizar un usuario
+ * - Solo el mismo usuario o un admin pueden actualizarlo
+ * - Se valida que el email y username sean unicos
+ * - Se actualizan los campos que vengan en el body y cumplan las condiciones
+ * - Si hay errores de validacion se devuelven
+ * - Se guarda el usuario actualizado
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @returns Usuario actualizado
+ */
 const update = async (req, res) => {
     try {
         const { id } = req.params;
         const user = req.user;
+
+        // extraemos los campos del body que se pueden actualizar
         const { 
             name, 
             lastName, 
@@ -67,8 +91,8 @@ const update = async (req, res) => {
         } = req.body;
 
         const model = await User.findById(id);
-        const isSameUser = user._id == id;
-        const isAdmin = user.rol == 'admin';
+        const isSameUser = user._id == id; // variable para determinar si es el mismo usuario para validaciones
+        const isAdmin = user.rol == 'admin'; // variable para determinar si es admin para validaciones
 
         if (!model) { // si no existe el usuario devolvemos error
             return res.status(404).json({ mensaje: `${modelName} no encontrado` });
@@ -95,7 +119,14 @@ const update = async (req, res) => {
             const err = await validator.validateField('username'); // validamos username
             if (err) errors.push(err);
         }
-        if (avatar && isSameUser) model.avatar = avatar;
+        if (avatar && isSameUser) {
+            try {
+                const avatarUrl = await decodeAndSaveImage(avatar, 'avatars', `avatar_${model._id}`);
+                model.avatar = avatarUrl;
+            } catch (error) {
+                errors.push({ field: 'avatar', message: error?.message ?? 'Error al guardar la imagen'});                
+            }
+        }
         if (bio && isSameUser) model.bio = bio;
         if (deactivated !== undefined && isAdmin) model.deactivated = deactivated;
         if (rol && isAdmin) model.rol = rol;
@@ -126,6 +157,15 @@ const show = async (req, res) => {
     }
 };
 
+/**
+ * Api showByUsername para obtener un usuario por su username
+ * - Si no se encuentra el usuario se devuelve un error 404
+ * - Si se encuentra se devuelve el usuario
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @returns Usuario encontrado
+ */
 const showByUsername = async (req, res) => {
     try {
         const { username } = req.params;
@@ -169,7 +209,17 @@ const index = async (req, res) => {
     }
 };
 
-// seguir/dejar de seguir a un usuario
+/**
+ * Api toFollow para seguir/dejar de seguir a un usuario
+ * - Si el usuario ya sigue al otro usuario, se deja de seguir
+ * - Si el usuario no sigue al otro usuario, se comienza a seguir
+ * - Se actualizan los arrays de followers y followings de ambos usuarios para mantener la integridad y consistencia
+ * - Se envia una notificacion al usuario seguido/seguido
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @returns Usuario seguido/seguido y usuario autenticado actualizado
+ */
 const toFollow = async (req, res) => {
     try {
         const { id } = req.params;
@@ -206,7 +256,15 @@ const toFollow = async (req, res) => {
     }
 }
 
-// funcion para buscar usuarios
+/**
+ * Api search para buscar usuarios por nombre, apellido, username o email
+ * - Se utiliza una expresion regular para busqueda case-insensitive
+ * - Se excluye el usuario actual de los resultados
+ * - Se devuelve la lista de usuarios encontrados
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 const search = async (req, res) => {
     try {
         const { q } = req.query;
