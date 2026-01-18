@@ -1,12 +1,29 @@
 const { default: mongoose } = require("mongoose");
 
+/**
+ * Servicio de validacion de datos
+ * - Proporciona funcionalidades para validar datos segun reglas definidas
+ * - Soporta validaciones asincronas como unicidad y existencia en base de datos
+ * - Permite definir reglas como required, unique, exists, minLength, maxLength
+ * - Retorna un array de errores encontrados durante la validacion 
+ */
 class ValidatorService {
-    rules;
+    rules; // reglas de validacion
 
+    // inicializamos el servicio con las reglas de validacion
     constructor(rules) {
         this.rules = rules;
     }
 
+    /**
+     * Metodo para validar los datos segun las reglas definidas
+     * - inicializa un array de errores
+     * - recorre cada campo y valida segun sus reglas
+     * - si encuentra errores, los agrega al array de errores
+     * - finalmente retorna el array de errores
+     * 
+     * @returns Array de errores encontrados durante la validacion
+     */
     async validate() {
         const errors = [];
 
@@ -21,6 +38,20 @@ class ValidatorService {
         return errors;
     }
 
+    /**
+     * Metodo para validar un campo segun sus reglas
+     * - obtiene el conjunto de reglas para el campo
+     * - si no hay reglas, retorna null
+     * - obtiene el valor del campo y las reglas a aplicar
+     * - inicializa el error como vacio
+     * - recorre cada regla y la aplica al valor del campo
+     * - si encuentra un error, lo asigna a la variable error
+     * - si ya hay un error, no sigue validando
+     * - finalmente retorna el error si existe, o null si no hay errores
+     * 
+     * @param {*} field 
+     * @returns Error encontrado durante la validacion o null si no hay errores
+     */
     async validateField(field) {
         const ruleSet = this.rules[field]; // obtenemos el conjunto de reglas para el campo
         if (!ruleSet) return null; // si no hay reglas, no hacemos nada

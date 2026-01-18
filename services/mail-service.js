@@ -1,5 +1,10 @@
 const nodemailer = require('nodemailer');
-
+/**
+ * Servicio de correo electronico
+ * - Proporciona funcionalidades para el envio de correos electrónicos
+ * - Utiliza nodemailer para el envio de correos
+ * - Soporta plantillas de correo para diferentes tipos de mensajes
+ */
 class MailService {
     transporter;
 
@@ -21,7 +26,18 @@ class MailService {
         });
     }
 
-    // metodo para enviar un email
+    /**
+     * Metodo para enviar un correo electronico
+     * - Utiliza el transporter configurado para enviar el correo
+     * - Construye las opciones del correo incluyendo destinatario, asunto y contenido HTML
+     * - Utiliza plantillas para el contenido del correo
+     * 
+     * @param {*} to 
+     * @param {*} subject 
+     * @param {*} data 
+     * @param {*} template 
+     * @returns Resultado del envio del correo
+     */
     async sendEmail(to, subject, data, template) {
         const mailOptions = {
             from: process.env.MAIL_FROM,
@@ -41,6 +57,12 @@ class MailService {
         }
     }
 
+    /**
+     * Metodo para obtener la plantilla de correo segun el tipo
+     * @param {*} type 
+     * @param {*} data 
+     * @returns Plantilla de correo en formato HTML
+     */
     getTemplate(type, data) {
         switch (type) {
             case 'welcome':
