@@ -1,4 +1,8 @@
 const User = require("../models/userModel");
+const Message = require("../models/messageModel");
+const Post = require("../models/postModel");
+const Notification = require("../models/notificationModel");
+
 const mailService = require("../services/mail-service");
 const ValidatorService = require("../services/validator-service");
 const { notificate, decodeAndSaveImage } = require("../utils/helpers");
@@ -180,15 +184,45 @@ const showByUsername = async (req, res) => {
     }
 };
 
+/**
+ * Api remove para eliminar un usuario
+ * - Solo un admin puede eliminar un usuario
+ * - No se pueden eliminar usuarios con rol admin
+ * - Se eliminan los datos relacionados con el usuario de forma asincrona (Posts, Messages, Notifications)
+ * - Se envia un email de cuenta eliminada (si esta configurado el servicio de email)
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 const remove = async (req, res) => {
     try {
         const { id } = req.params;
-        const model = await User.findByIdAndDelete(id);
-        if (!model) {
+        const userToDelete = await User.findById(id);
+        
+        if (userToDelete?.rol === 'admin') {
+            return res.status(403).json({ mensaje: `No se puede eliminar un usuario con rol admin` });
+        }
+
+        if (!userToDelete) {
             return res.status(404).json({ mensaje: `${modelName} no encontrado` });
         }
+
+        await userToDelete.deleteOne();
+
+        // eliminamos los datos relacionados con el usuario
+        // de forma asincrona, no esperamos a que se eliminen para responder ya que puede tardar
+        Message.deleteMany({ $or: [ { from: id }, { to: id } ] }); // eliminamos los mensajes del usuario
+        Post.deleteMany({ author: id }); // eliminamos los posts del usuario
+        Notification.deleteMany({ user: id }); // eliminamos las notificaciones del usuario
+
+        // enviar email de cuenta eliminada
+        // asincronamente, no esperamos a que se envie para responder
+        mailService.sendEmail(userToDelete.email,'Cuenta eliminada',userToDelete, 'delete-account');
+        
         res.status(200).json({ mensaje: `${modelName} eliminado correctamente` });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ mensaje: `Error al eliminar el ${modelName}` });
     }
 };

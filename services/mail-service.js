@@ -72,6 +72,13 @@ class MailService {
                         <br>
                         <p>Saludos,<br>El equipo de Nexo</p>
                         `;
+            case 'delete-account':
+                return `<h3>Cuenta eliminada</h3>
+                        <p>Hola ${data.name}, tu cuenta ha sido eliminada de nexo.</p><br>
+                        <p>Sentimos verte partir. Si cambias de opinión, siempre eres bienvenido de nuevo.</p>
+                        <br>
+                        <p>Saludos,<br>El equipo de Nexo</p>
+                        `;
             default:
                 return `<h1>Notificación de Nexo</h1>
                         <p>Hola ${data.name}, este es un mensaje de notificación.</p>`;
